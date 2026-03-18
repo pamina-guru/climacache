@@ -1,8 +1,73 @@
-function CurrentWeatherCard({ weather, source }) {
+function CurrentWeatherCard({
+  weather,
+  source,
+  tempUnit,
+  windUnit,
+  pressureUnit,
+}) {
   if (!weather) return null;
 
+  const description =
+    weather.weather[0].description.charAt(0).toUpperCase() +
+    weather.weather[0].description.slice(1);
+
+  const getWeatherEmoji = (main) => {
+    switch (main) {
+      case "Clear":
+        return "☀️";
+      case "Clouds":
+        return "☁️";
+      case "Rain":
+        return "🌧️";
+      case "Drizzle":
+        return "🌦️";
+      case "Thunderstorm":
+        return "⛈️";
+      case "Snow":
+        return "❄️";
+      case "Mist":
+      case "Fog":
+      case "Haze":
+      case "Smoke":
+        return "🌫️";
+      default:
+        return "🌤️";
+    }
+  };
+
+  const convertTemp = (tempC) => {
+    if (tempUnit === "fahrenheit") {
+      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
+    }
+    return `${Math.round(tempC)}°C`;
+  };
+
+  const convertWind = (windMps) => {
+    if (windUnit === "mph") {
+      return `${(windMps * 2.23694).toFixed(2)} mph`;
+    }
+
+    if (windUnit === "kmh") {
+      return `${(windMps * 3.6).toFixed(2)} km/h`;
+    }
+
+    return `${windMps.toFixed(2)} m/s`;
+  };
+
+  const convertPressure = (pressureHpa) => {
+    if (pressureUnit === "atm") {
+      return `${(pressureHpa / 1013.25).toFixed(2)} atm`;
+    }
+
+    if (pressureUnit === "mbar") {
+      return `${pressureHpa} mbar`;
+    }
+
+    return `${pressureHpa} hPa`;
+  };
+
   return (
-    <div className="w-full max-w-3xl rounded-3xl border border-white/15 bg-white/10 p-6 text-white shadow-2xl backdrop-blur-md">
+    <div className="w-full max-w-4xl rounded-3xl border border-white/15 bg-white/10 p-6 text-white shadow-2xl backdrop-blur-md">
       <div className="mb-4 flex items-start justify-between">
         <div>
           <h2 className="text-3xl font-bold">{weather.name}</h2>
@@ -16,19 +81,22 @@ function CurrentWeatherCard({ weather, source }) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div>
+          <div className="mb-2 text-6xl">
+            {getWeatherEmoji(weather.weather[0].main)}
+          </div>
+
           <p className="text-6xl font-semibold">
-            {Math.round(weather.main.temp)}°C
+            {convertTemp(weather.main.temp)}
           </p>
-          <p className="mt-2 text-lg capitalize">
-            {weather.weather[0].description}
-          </p>
+
+          <p className="mt-2 text-lg">{description}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="rounded-2xl bg-white/10 p-4">
             <p className="text-white/60">Feels like</p>
             <p className="mt-1 text-xl font-semibold">
-              {Math.round(weather.main.feels_like)}°C
+              {convertTemp(weather.main.feels_like)}
             </p>
           </div>
 
@@ -42,14 +110,14 @@ function CurrentWeatherCard({ weather, source }) {
           <div className="rounded-2xl bg-white/10 p-4">
             <p className="text-white/60">Wind</p>
             <p className="mt-1 text-xl font-semibold">
-              {weather.wind.speed} m/s
+              {convertWind(weather.wind.speed)}
             </p>
           </div>
 
           <div className="rounded-2xl bg-white/10 p-4">
             <p className="text-white/60">Pressure</p>
             <p className="mt-1 text-xl font-semibold">
-              {weather.main.pressure} hPa
+              {convertPressure(weather.main.pressure)}
             </p>
           </div>
         </div>

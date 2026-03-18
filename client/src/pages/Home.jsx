@@ -13,7 +13,14 @@ function Home() {
   const [forecastSource, setForecastSource] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [recentSearches, setRecentSearches] = useState([]);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const saved = localStorage.getItem("climacache_recent_searches");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [tempUnit, setTempUnit] = useState("celsius");
@@ -115,6 +122,13 @@ function Home() {
   };
 
   useEffect(() => {
+    localStorage.setItem(
+      "climacache_recent_searches",
+      JSON.stringify(recentSearches),
+    );
+  }, [recentSearches]);
+
+  useEffect(() => {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
@@ -142,8 +156,48 @@ function Home() {
     );
   }, []);
 
+  const getBackgroundClass = () => {
+    const main = weather?.weather?.[0]?.main;
+
+    switch (main) {
+      case "Clear":
+        return "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.25),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(56,189,248,0.3),transparent_50%),linear-gradient(to_bottom_right,#0ea5e9,#1e3a8a,#020617)]";
+
+      case "Clouds":
+        return "bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.15),transparent_40%),radial-gradient(circle_at_70%_60%,rgba(148,163,184,0.25),transparent_50%),linear-gradient(to_bottom_right,#475569,#1e293b,#020617)]";
+
+      case "Rain":
+      case "Drizzle":
+        return "bg-[radial-gradient(circle_at_20%_80%,rgba(59,130,246,0.25),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(30,58,138,0.3),transparent_50%),linear-gradient(to_bottom_right,#0f172a,#1e3a8a,#020617)]";
+
+      case "Thunderstorm":
+        return "bg-[radial-gradient(circle_at_50%_20%,rgba(168,85,247,0.25),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(30,27,75,0.4),transparent_50%),linear-gradient(to_bottom_right,#020617,#1e1b4b,#000000)]";
+
+      case "Snow":
+        return "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.6),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(186,230,253,0.5),transparent_50%),linear-gradient(to_bottom_right,#e0f2fe,#bae6fd,#64748b)]";
+
+      case "Mist":
+      case "Fog":
+      case "Haze":
+      case "Smoke":
+        return "bg-[radial-gradient(circle_at_40%_40%,rgba(203,213,225,0.3),transparent_50%),linear-gradient(to_bottom_right,#94a3b8,#475569,#1e293b)]";
+
+      default:
+        return "bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.2),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(30,58,138,0.3),transparent_50%),linear-gradient(to_bottom_right,#020617,#0f172a,#1e3a8a)]";
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-10">
+    <main
+      className={`relative min-h-screen overflow-hidden px-4 py-10 transition-all duration-700 ${getBackgroundClass()}`}
+    >
+      {/* Glow blobs */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 -top-20 h-72 w-72 animate-pulse rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div className="absolute right-[-5rem] top-1/3 h-80 w-80 animate-pulse rounded-full bg-indigo-500/20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 animate-pulse rounded-full bg-cyan-400/20 blur-3xl"></div>
+      </div>
+
       <Sidebar
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
@@ -155,7 +209,7 @@ function Home() {
         setPressureUnit={setPressureUnit}
       />
 
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-8">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center gap-8">
         <div className="text-center text-white">
           <h1 className="text-5xl font-bold tracking-tight">ClimaCache</h1>
           <p className="mt-3 text-lg text-white/70">
@@ -194,13 +248,13 @@ function Home() {
         )}
 
         {error && (
-          <p className="rounded-xl bg-red-500/15 px-4 py-3 text-red-200">
+          <p className="rounded-xl bg-red-500/15 px-4 py-3 text-red-200 backdrop-blur-md">
             {error}
           </p>
         )}
 
         {!loading && !weather && !error && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 px-8 py-10 text-center text-white/70">
+          <div className="rounded-3xl border border-white/10 bg-white/5 px-8 py-10 text-center text-white/70 backdrop-blur-md">
             Search for a city to view live weather data.
           </div>
         )}
